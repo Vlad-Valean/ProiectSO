@@ -1,3 +1,3 @@
 #!/bin/bash
-mkdir ./target
+mkdir -p ./target
 gcc -Wall -o ./target/vdir vdir.c
