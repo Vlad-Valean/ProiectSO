@@ -11,11 +11,16 @@ void rec_parse(DIR *directory_obj, const char* path) {
     DIR *child_directory_obj = NULL;
     while((directory_content = readdir(directory_obj))) {   
         printf("%s\n", directory_content->d_name);
-        if(strcmp(directory_content->d_name, ".\0") && strcmp(directory_content->d_name != "..\0")) {
-        } else if((child_directory_obj = opendir(strcat(strcat(path, "\\"), directory_content->d_name)))) {
+        char child_directory_path[120] = "\0";
+        strcpy(child_directory_path, path);
+        strcat(child_directory_path, "\\\0");
+        strcat(child_directory_path, directory_content->d_name);
+        if(strcmp(directory_content->d_name, ".\0") && strcmp(directory_content->d_name, "..\0")) {
+        } else if((child_directory_obj = opendir(child_directory_path))) {
         char new_path[120];
         //daca e director
-        sprintf(new_path,"%s\\%s", new_path, directory_content->d_name);
+        strcpy(new_path, "\\\0");
+        strcat(new_path, directory_content->d_name);
         rec_parse(child_directory_obj, new_path);
         //altfel ....
         DIR *child_directory_obj;
