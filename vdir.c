@@ -1,9 +1,26 @@
 #include<stdio.h>
 #include<sys/types.h>
+#include<sys/fcntl.h>
+#include<sys/stat.h>
 #include<dirent.h>
 #include<string.h>
 #include<stdlib.h>
 #include<errno.h>
+
+void snap_file(char *path) {
+    char snap_path[120];
+    char *name;
+    char *extension;
+    name = strtok(path, ".");
+    strcpy(snap_path, name);
+    strcat(snap_path, "_snap\0");
+    if((extension = strtok(NULL, "."))) {
+        strcat(snap_path, ".\0");
+        strcat(snap_path, extension);
+    }
+    printf("%d\n", open(path, O_RDONLY , S_IROTH));
+    printf("%d\n", open(snap_path, O_EXCL | O_WRONLY | O_TRUNC, S_IWOTH));
+}
 
 
 void rec_parse(DIR *directory_obj, const char* path) {
@@ -19,17 +36,17 @@ void rec_parse(DIR *directory_obj, const char* path) {
         
         if(!strcmp(directory_content->d_name, ".\0") || !strcmp(directory_content->d_name, "..\0")) {
         } else {
-        
-            if((child_directory_obj = opendir(child_directory_path))) {
             char new_path[120];
-            //daca e director
             strcpy(new_path, "/\0");
             strcat(new_path, directory_content->d_name);
+            if((child_directory_obj = opendir(child_directory_path))) {
+
             rec_parse(child_directory_obj, new_path);
             printf("\n");
             //altfel ....
             } else {
-                printf("file:  %s\n", directory_content->d_name);
+                printf("file:  %s\n", new_path);
+                snap_file(new_path);
             }
         } 
 
