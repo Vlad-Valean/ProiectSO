@@ -9,23 +9,30 @@
 void rec_parse(DIR *directory_obj, const char* path) {
     struct dirent *directory_content = NULL;
     DIR *child_directory_obj = NULL;
-    while((directory_content = readdir(directory_obj))) {   
-        printf("%s\n", directory_content->d_name);
+    printf("\nFOLDER:  %s:\n\n", path);
+    while((directory_content = readdir(directory_obj))) {
+
         char child_directory_path[120] = "\0";
         strcpy(child_directory_path, path);
-        strcat(child_directory_path, "\\\0");
+        strcat(child_directory_path, "/\0");
         strcat(child_directory_path, directory_content->d_name);
-        if(strcmp(directory_content->d_name, ".\0") && strcmp(directory_content->d_name, "..\0")) {
-        } else if((child_directory_obj = opendir(child_directory_path))) {
-        char new_path[120];
-        //daca e director
-        strcpy(new_path, "\\\0");
-        strcat(new_path, directory_content->d_name);
-        rec_parse(child_directory_obj, new_path);
-        //altfel ....
-        DIR *child_directory_obj;
-        rec_parse(child_directory_obj, directory_content->d_name);
-        }
+        
+        if(!strcmp(directory_content->d_name, ".\0") || !strcmp(directory_content->d_name, "..\0")) {
+        } else {
+        
+            if((child_directory_obj = opendir(child_directory_path))) {
+            char new_path[120];
+            //daca e director
+            strcpy(new_path, "/\0");
+            strcat(new_path, directory_content->d_name);
+            rec_parse(child_directory_obj, new_path);
+            printf("\n");
+            //altfel ....
+            } else {
+                printf("file:  %s\n", directory_content->d_name);
+            }
+        } 
+
         
     }
     closedir(directory_obj);
