@@ -39,34 +39,38 @@ void update_path(char* new_path, const char *old_path, const char *path_extender
     strcat(new_path, path_extender);
 }
 
-void rec_parse(const char* odir_path, const char* sdir_path) {
-    DIR *directory_obj = opendir(odir_path);
-    struct dirent *directory_content = NULL;
-    DIR *child_directory_obj = NULL;
-    while((directory_content = readdir(directory_obj))) {
+void rec_parse(const char* output_dir_path, const char* input_dir_path) {
+    DIR *output_dir_obj = opendir(output_dir_path); // output
+    DIR *input_dir_obj = opendir(input_dir_path); // input 
+    struct dirent *input_dir_content = NULL; // input
+    DIR *child_input_dir_obj = NULL; // input rec
+    while((input_dir_content = readdir(input_dir_obj))) {
 
-        char child_directory_path[240];
-        update_path(child_directory_path, odir_path, directory_content->d_name);
+        char child_input_dir_path[240];
+        char child_output_dir_path[240];
         
-        if(dot_folder_validation(directory_content->d_name)) {
+        update_path(child_input_dir_path, input_dir_path, input_dir_content->d_name); //update input path
+        update_path(child_output_dir_path, output_dir_path, child_input_dir_path); //generate output(snap) path
+
+        if(dot_folder_validation(input_dir_content->d_name)) {
         } else {
             
-            printf("%s\n", child_directory_path);
-            if((child_directory_obj = opendir(child_directory_path))) {
-            rec_parse(odir_path, child_directory_path);
+            printf("%s\n", child_input_dir_path);
+            if((child_input_dir_obj = opendir(child_input_dir_path))) {
+            rec_parse(output_dir_path, child_input_dir_path);
             
             } else {
-                snap_file(child_directory_path);
+                snap_file(child_input_dir_path);
             }
         } 
 
     }
-    closedir(directory_obj);
+    closedir(input_dir_obj);
 }
 
 int main(const int argc, const char **argv)  {
-    if(argc < 2) { // 3
-        printf("Error program call: ./vdir <output_directory_path> <directories_to_be_snapped\n");
+    if(argc < 2 || argc > 10 ) { // 3
+        printf("Error program call: ./vdir <output_directory_path> <directories_to_be_snapped ...>\n");
         exit(-1);
     }
     char odir_path[120];
