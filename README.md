@@ -12,4 +12,4 @@
 # fiecare snap pentru folder ar trebuii sa reprezinte un proces diferit
 
 # Saptamana 9
-#
+# 
