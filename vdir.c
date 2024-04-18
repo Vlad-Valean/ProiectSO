@@ -53,14 +53,13 @@ void rec_parse(const char* odir_path, const char* sdir_path) {
             
             printf("%s\n", child_directory_path);
             if((child_directory_obj = opendir(child_directory_path))) {
-            rec_parse(child_directory_obj, child_directory_path);
+            rec_parse(odir_path, child_directory_path);
             
             } else {
                 snap_file(child_directory_path);
             }
         } 
 
-        
     }
     closedir(directory_obj);
 }
@@ -71,11 +70,21 @@ int main(const int argc, const char **argv)  {
         exit(-1);
     }
     char odir_path[120];
-    char sdir_path[120];
+    char sdir_path[120][10];
     strcpy(odir_path, argv[1]);
-    strcpy(sdir_path, argv[2]);
+    for(int i  = 2; i < argc; i++) {
+        strcpy(sdir_path[i-2], argv[i]);
+    }
     mkdir(odir_path, S_IRWXU);
-    rec_parse(odir_path, sdir_path);
+    perror("mesaj");
+    
+    for(int i = 0; i < argc - 2; i++) {
+        printf("%s\n", sdir_path[i]); 
+        // rec_parse(odir_path, sdir_path);
+        // verifica daca sunt fisiere daca sunt fisiere returneaza mesaj eroare sau daca exista
+        // ruleaza rec_parse pe procese diferite refactorizeaza codul de la recparse
+    }
+    
     
     return 0;
 }
