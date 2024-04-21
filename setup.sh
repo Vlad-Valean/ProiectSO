@@ -14,6 +14,7 @@ do
         echo "ceva4" > "../dir$i/subdir2/subdir1/file2.txt"
     elif [ "$1" = "r" ]; then
         rm -rf "../dir$i"
+        rm -rf "../target"
         rm -rf "../odir"
     else 
         echo "./setup.sh c (create) / r (remove)";

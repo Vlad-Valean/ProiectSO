@@ -13,10 +13,19 @@
 
 void snap_file(char *output_path, char *input_path) {
     int fr = open(input_path, O_RDONLY , S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH );
+    if(fr == -1) {
+        perror("failed to open read file\n");
+        close(fr);
+        return;
+    }
+    
     int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IWUSR | S_IWGRP | S_IWOTH | S_IXUSR | S_IXGRP | S_IXOTH);
-    printf("%d\n", fr);
-    printf("%d\n", fw);
-    perror("open");
+    if(fw == -1) {
+        perror("failed to open write file\n");
+        close(fw);
+        return;
+    }
+
     close(fr);
     close(fw);
 }
@@ -43,6 +52,10 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
     DIR *input_dir_obj = opendir(input_dir_path); // input 
     struct dirent *input_dir_content = NULL; // input
     DIR *child_input_dir_obj = NULL; // input rec
+    char creat_oi_path[MAX_PATH];
+    update_path(creat_oi_path, output_dir_path, input_dir_path);
+    printf("%s\n", creat_oi_path);
+    mkdir(creat_oi_path, S_IRWXU);
     while((input_dir_content = readdir(input_dir_obj))) {
 
         char child_input_dir_path[MAX_PATH];
@@ -53,8 +66,7 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
             update_path(child_input_dir_path, input_dir_path, input_dir_content->d_name); //update input path
             update_path(child_output_dir_path, output_dir_path, child_input_dir_path); //generate output(snap) path
             if((child_input_dir_obj = opendir(child_input_dir_path))) {
-            mkdir(child_output_dir_path, S_IRWXU);
-            rec_parse(output_dir_path, child_input_dir_path);
+                rec_parse(output_dir_path, child_input_dir_path);
             } else {
                 snap_file(child_output_dir_path, child_input_dir_path);
             }
@@ -76,10 +88,8 @@ int main(const int argc, const char **argv)  {
         strcpy(sdir_path[i - MIN_INPUT_DIRS], argv[i]);
     }
     mkdir(odir_path, S_IRWXU);
-    perror("mesaj");
     
     for(int i = 0; i < argc - MIN_INPUT_DIRS; i++) {
-        // printf("%s\n", sdir_path[i]); 
         rec_parse(odir_path, sdir_path[i]);
         // verifica daca sunt fisiere daca sunt fisiere returneaza mesaj eroare sau daca exista
         // ruleaza rec_parse pe procese diferite refactorizeaza codul de la recparse
