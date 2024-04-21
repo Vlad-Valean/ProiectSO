@@ -7,7 +7,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<errno.h>
-#define MAX_PATH 512
+#define MAX_PATH 1028
 #define MAX_INPUT_DIRS 10
 #define MIN_INPUT_DIRS 2
 
@@ -27,15 +27,13 @@ int dot_dir_validation(const char *path) {
 
 void update_path(char* new_path, const char *old_path, const char *path_extender) {
     char update_path_extender[MAX_PATH];
-    if(!strncmp(path_extender, "./\0", 2)) {;
-        for(int i = 0; i < strlen(path_extender) - 2; i++)
-            update_path_extender[i] = path_extender[i + 2];
+    if(!strncmp(path_extender, "./\0", 2)) {
+        path_extender += 2;
     } else if(!strncmp(path_extender, "../\0", 3)) {
-        for(int i = 0; i < strlen(path_extender) - 3; i++)
-            update_path_extender[i] = path_extender[i + 3];
-    } else {
-        strcpy(update_path_extender, path_extender);
+        path_extender += 3;
     }
+
+    strcpy(update_path_extender, path_extender);
     strcpy(new_path, old_path);
     strcat(new_path, "/\0");
     strcat(new_path, update_path_extender);
@@ -49,14 +47,11 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
 
         char child_input_dir_path[MAX_PATH];
         char child_output_dir_path[MAX_PATH];
-        
-        update_path(child_input_dir_path, input_dir_path, input_dir_content->d_name); //update input path
-        update_path(child_output_dir_path, output_dir_path, child_input_dir_path); //generate output(snap) path
-
+     
         if(dot_dir_validation(input_dir_content->d_name)) {
         } else {
-            printf("%s\n", child_input_dir_path);
-            printf("%s\n", child_output_dir_path);
+            update_path(child_input_dir_path, input_dir_path, input_dir_content->d_name); //update input path
+            update_path(child_output_dir_path, output_dir_path, child_input_dir_path); //generate output(snap) path
             if((child_input_dir_obj = opendir(child_input_dir_path))) {
             mkdir(child_output_dir_path, S_IRWXU);
             rec_parse(output_dir_path, child_input_dir_path);
@@ -84,7 +79,7 @@ int main(const int argc, const char **argv)  {
     perror("mesaj");
     
     for(int i = 0; i < argc - MIN_INPUT_DIRS; i++) {
-        printf("%s\n", sdir_path[i]); 
+        // printf("%s\n", sdir_path[i]); 
         rec_parse(odir_path, sdir_path[i]);
         // verifica daca sunt fisiere daca sunt fisiere returneaza mesaj eroare sau daca exista
         // ruleaza rec_parse pe procese diferite refactorizeaza codul de la recparse
