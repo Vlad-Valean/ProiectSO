@@ -18,14 +18,12 @@ void snap_file(char *output_path, char *input_path) {
 
     int fr = open(input_path, O_RDONLY ,  S_IRWXU | S_IRWXG | S_IRWXO);
     if(fr == -1) {
-        // perror("failed to open read file\n");
         close(fr);
         return;
     }
     
     int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
     if(fw == -1) {
-        // perror("failed to open write file\n");
         close(fw);
         return;
     }
@@ -58,9 +56,9 @@ void update_path(char* new_path, const char *old_path, const char *path_extender
 }
 
 void rec_parse(const char* output_dir_path, const char* input_dir_path) {
-    DIR *input_dir_obj = opendir(input_dir_path); // input 
-    struct dirent *input_dir_content = NULL; // input
-    DIR *child_input_dir_obj = NULL; // input rec
+    DIR *input_dir_obj = opendir(input_dir_path); 
+    struct dirent *input_dir_content = NULL;
+    DIR *child_input_dir_obj = NULL;
     char creat_oi_path[MAX_PATH];
     update_path(creat_oi_path, output_dir_path, input_dir_path);
     mkdir(creat_oi_path, S_IRWXU);
@@ -124,13 +122,6 @@ int main(const int argc, const char **argv)  {
     }
     mkdir(odir_path, S_IRWXU);
     
-    create_processes(sdir_path, odir_path, argc - MIN_INPUT_DIRS, 0);
-
-    // for(int i = 0; i < argc - MIN_INPUT_DIRS; i++) {
-    //     rec_parse(odir_path, sdir_path[i]);
-    //     // verifica daca sunt fisiere daca sunt fisiere returneaza mesaj eroare sau daca exista
-    //     // ruleaza rec_parse pe procese diferite refactorizeaza codul de la recparse
-    // }
-    
+    create_processes(sdir_path, odir_path, argc - MIN_INPUT_DIRS, 0);   
     return 0;
 }
