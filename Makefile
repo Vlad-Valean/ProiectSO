@@ -18,7 +18,7 @@ refresh:
 	make remove
 	make create
 
-m?=WIP
+m?=wip
 git_up:
 	git add .
 	git commit -m "$(m)"
