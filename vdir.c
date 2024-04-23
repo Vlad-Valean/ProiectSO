@@ -3,28 +3,37 @@
 #include<sys/fcntl.h>
 #include<sys/stat.h>
 #include<sys/unistd.h>
+#include<sys/wait.h>
 #include<dirent.h>
 #include<string.h>
 #include<stdlib.h>
 #include<errno.h>
-#define MAX_PATH 1028
+#define MAX_PATH 1024
+#define BUFFER sizeof(char) * 3
 #define MAX_INPUT_DIRS 10
 #define MIN_INPUT_DIRS 2
 
 void snap_file(char *output_path, char *input_path) {
-    int fr = open(input_path, O_RDONLY , S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IXGRP | S_IXOTH );
+    char buff[BUFFER];
+
+    int fr = open(input_path, O_RDONLY ,  S_IRWXU | S_IRWXG | S_IRWXO);
     if(fr == -1) {
-        perror("failed to open read file\n");
+        // perror("failed to open read file\n");
         close(fr);
         return;
     }
     
-    int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IWUSR | S_IWGRP | S_IWOTH | S_IXUSR | S_IXGRP | S_IXOTH);
+    int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
     if(fw == -1) {
-        perror("failed to open write file\n");
+        // perror("failed to open write file\n");
         close(fw);
         return;
     }
+
+    while(read(fr, buff, sizeof(buff))) {
+        write(fw, buff, sizeof(buff));
+    }
+
 
     close(fr);
     close(fw);
@@ -54,7 +63,6 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
     DIR *child_input_dir_obj = NULL; // input rec
     char creat_oi_path[MAX_PATH];
     update_path(creat_oi_path, output_dir_path, input_dir_path);
-    printf("%s\n", creat_oi_path);
     mkdir(creat_oi_path, S_IRWXU);
     while((input_dir_content = readdir(input_dir_obj))) {
 
@@ -76,8 +84,30 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
     closedir(input_dir_obj);
 }
 
+void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, int num_processes, int index) {
+    
+    if(index >= num_processes)
+        return;
+
+    int pid = fork();
+    int* status;
+    status = 0;
+
+    if(pid == -1) {
+        printf("process %d ", index);
+        perror("failed");
+        exit(EXIT_FAILURE);
+    } else if(pid == 0) {
+        rec_parse(output_dir, snap_dirs[index]);        
+    } else {
+        create_processes(snap_dirs, output_dir, num_processes, index++);
+    }
+    
+    wait(status);
+}
+
 int main(const int argc, const char **argv)  {
-    if(argc < MIN_INPUT_DIRS || argc > MAX_INPUT_DIRS ) { // 3
+    if(argc < MIN_INPUT_DIRS || argc > MAX_INPUT_DIRS ) { 
         printf("Error program call: ./vdir <output_directory_path> <directories_to_be_snapped ...>\n");
         exit(-1);
     }
@@ -89,11 +119,13 @@ int main(const int argc, const char **argv)  {
     }
     mkdir(odir_path, S_IRWXU);
     
-    for(int i = 0; i < argc - MIN_INPUT_DIRS; i++) {
-        rec_parse(odir_path, sdir_path[i]);
-        // verifica daca sunt fisiere daca sunt fisiere returneaza mesaj eroare sau daca exista
-        // ruleaza rec_parse pe procese diferite refactorizeaza codul de la recparse
-    }
+    create_processes(sdir_path, odir_path, argc - MIN_INPUT_DIRS, 0);
+
+    // for(int i = 0; i < argc - MIN_INPUT_DIRS; i++) {
+    //     rec_parse(odir_path, sdir_path[i]);
+    //     // verifica daca sunt fisiere daca sunt fisiere returneaza mesaj eroare sau daca exista
+    //     // ruleaza rec_parse pe procese diferite refactorizeaza codul de la recparse
+    // }
     
     return 0;
 }
