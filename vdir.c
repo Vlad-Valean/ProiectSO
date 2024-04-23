@@ -10,7 +10,7 @@
 #include<errno.h>
 #define MAX_PATH 1024
 #define BUFFER sizeof(char) * 3
-#define MAX_INPUT_DIRS 10
+#define MAX_INPUT_DIRS 11
 #define MIN_INPUT_DIRS 2
 
 void snap_file(char *output_path, char *input_path) {
@@ -90,8 +90,6 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
         return;
 
     int pid = fork();
-    int* status;
-    status = 0;
 
     if(pid == -1) {
         printf("process %d ", index);
@@ -100,10 +98,17 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
     } else if(pid == 0) {
         rec_parse(output_dir, snap_dirs[index]);        
     } else {
-        create_processes(snap_dirs, output_dir, num_processes, index++);
+        int status;
+        wait(&status);
+        if (WIFEXITED(status)) {
+            if (WEXITSTATUS(status) != EXIT_SUCCESS) {
+                printf("Child process failed for directory: %s\n", snap_dirs[index]);
+            }
+        } else {
+            printf("Child process terminated abnormally for directory: %s\n", snap_dirs[index]);
+        }
+        create_processes(snap_dirs, output_dir, num_processes, ++index);
     }
-    
-    wait(status);
 }
 
 int main(const int argc, const char **argv)  {

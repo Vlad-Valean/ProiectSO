@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {1..10}
+for i in {1..9}
 do
     if [ "$1" = "c" ]; then
         mkdir "../dir$i"
