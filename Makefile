@@ -8,10 +8,10 @@ test_all:
 	./vdir ../target ../dir1 ../dir2 ../dir3 ../dir4 ../dir5 ../dir6 ../dir7 ../dir8 ../dir9
 
 remove:
-	./setup.sh r
+	./scripts/setup.sh r
 
 create:
-	./setup.sh c
+	./scripts/setup.sh c
 
 refresh:
 	make comp
