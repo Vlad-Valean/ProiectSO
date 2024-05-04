@@ -1,9 +1,5 @@
 # ProiectSO
 
-# TO-DOs
-1. argumente -o , -s pentru a indica output dirul si quarantine dir ul
-
-
 # TASKS
 
 ![Week 6](./images/week6.jpg)
