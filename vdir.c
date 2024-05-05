@@ -115,12 +115,39 @@ int main(const int argc, const char **argv)  {
         exit(-1);
     }
     char odir_path[MAX_PATH];
+    char qdir_path[MAX_PATH];
     char sdir_path[MAX_PATH][MAX_INPUT_DIRS];
+    int dir_err=2;
     strcpy(odir_path, argv[1]);
     for(int i  = MIN_INPUT_DIRS; i < argc; i++) {
-        strcpy(sdir_path[i - MIN_INPUT_DIRS], argv[i]);
+        if(strncmp("-s\0", argv[i], 3)) {
+            strcpy(qdir_path, argv[i+1]);
+            i+=2;
+            dir_err--;
+        } else if(strncmp("-o\0", argv[i], 3)) {
+            strcpy(odir_path, argv[i+1]);
+            i+=2;
+            dir_err--;
+        } else 
+            strcpy(sdir_path[i - MIN_INPUT_DIRS], argv[i]);
+    }
+    switch (dir_err)
+    {
+    case 0:
+        printf("No output dir and quarantine dir\n");
+        exit(-1);
+        break;
+    
+    case 1:
+        printf("No output dir or quarantine dir\n");
+        exit(-1);
+        break;
+        
+    default:
+        break;
     }
     mkdir(odir_path, S_IRWXU);
+    mkdir(qdir_path, S_IRWXU);
     
     create_processes(sdir_path, odir_path, argc - MIN_INPUT_DIRS, 0);   
     return 0;
