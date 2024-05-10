@@ -15,7 +15,7 @@ do
     elif [ "$1" = "r" ]; then
         rm -rf "../dir$i"
         rm -rf "../target"
-        rm -rf "../odir"
+        rm -rf "../quarantine"
     else 
         echo "./setup.sh c (create) / r (remove)";
         exit 1

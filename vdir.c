@@ -10,8 +10,8 @@
 #include<errno.h>
 #define MAX_PATH 1024
 #define BUFFER sizeof(char) * 3
-#define MAX_INPUT_DIRS 11
-#define MIN_INPUT_DIRS 2
+#define MIN_INPUT_DIRS 5
+#define MAX_INPUT_DIRS 14
 
 void snap_file(char *output_path, char *input_path) {
     char buff[BUFFER];
@@ -110,42 +110,40 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
 }
 
 int main(const int argc, const char **argv)  {
+    
     if(argc < MIN_INPUT_DIRS || argc > MAX_INPUT_DIRS ) { 
-        printf("Error program call: ./vdir <output_directory_path> <directories_to_be_snapped ...>\n");
+        printf("Usage: ./vdir -o <output_directory_path> -s <quarantine_directory_path> <directories_to_be_snapped ...>\n");
         exit(-1);
     }
+    
     char odir_path[MAX_PATH];
     char qdir_path[MAX_PATH];
     char sdir_path[MAX_PATH][MAX_INPUT_DIRS];
-    int dir_err=2;
-    strcpy(odir_path, argv[1]);
-    for(int i  = MIN_INPUT_DIRS; i < argc; i++) {
-        if(strncmp("-s\0", argv[i], 3)) {
-            strcpy(qdir_path, argv[i+1]);
-            i+=2;
-            dir_err--;
-        } else if(strncmp("-o\0", argv[i], 3)) {
-            strcpy(odir_path, argv[i+1]);
-            i+=2;
-            dir_err--;
-        } else 
-            strcpy(sdir_path[i - MIN_INPUT_DIRS], argv[i]);
-    }
-    switch (dir_err)
-    {
-    case 0:
-        printf("No output dir and quarantine dir\n");
-        exit(-1);
-        break;
+    int num_dirs = 0;
     
-    case 1:
-        printf("No output dir or quarantine dir\n");
-        exit(-1);
-        break;
-        
-    default:
-        break;
+  for (int i = 1; i < argc; i++) {
+        if (strcmp("-o", argv[i]) == 0) {
+            if (i + 1 < argc) {
+                strcpy(odir_path, argv[i + 1]);
+                i++;
+            } else {
+                printf("Error: Missing output directory path.\n");
+                exit(-1);
+            }
+        } else if (strcmp("-s", argv[i]) == 0) {
+            strcpy(qdir_path, argv[i + 1]);
+            i++;
+        } else {
+            strcpy(sdir_path[num_dirs], argv[i]);
+            num_dirs++;
+        }
     }
+
+    if (num_dirs == 0) {
+        printf("Error: No directories to be snapped provided.\n");
+        exit(-1);
+    }
+ 
     mkdir(odir_path, S_IRWXU);
     mkdir(qdir_path, S_IRWXU);
     
