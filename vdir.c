@@ -12,7 +12,7 @@
 
 #define MAX_PATH 1024
 #define MAX_STAT 1024
-#define BUFFER sizeof(char) * 3
+#define BUFFER 4096
 #define MIN_INPUT_DIRS 5
 #define MAX_INPUT_DIRS 14
 
@@ -65,9 +65,8 @@ void snap_file(char *output_path, char *input_path) {
     write(fw, cStat, sizeof(char) * strlen(cStat));
 
     while(read(fr, buff, sizeof(buff))) {
-        write(fw, buff, sizeof(buff));
+        write(fw, buff, sizeof(char) * strlen(buff));
     }
-
 
     close(fr);
     close(fw);
