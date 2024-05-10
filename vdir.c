@@ -16,6 +16,8 @@
 #define MIN_INPUT_DIRS 5
 #define MAX_INPUT_DIRS 14
 
+
+//file functions
 void permission_translator(struct stat file, char* permissions) {
     strcpy(permissions, "");
     strcat(permissions, (file.st_mode & S_IRUSR) ? "r" : "-");
@@ -72,6 +74,7 @@ void snap_file(char *output_path, char *input_path) {
     close(fw);
 }
 
+// path functions
 int dot_dir_validation(const char *path) {
     return !strcmp(path, ".\0") || !strcmp(path, "..\0");
 }
@@ -84,6 +87,8 @@ void update_path(char* new_path, const char *old_path, const char *path_extender
     sprintf(new_path, "%s/%s", old_path, path_sanitizer(path_extender));
 }
 
+
+// main functions
 void rec_parse(const char* output_dir_path, const char* input_dir_path) {
     DIR *input_dir_obj = opendir(input_dir_path); 
     struct dirent *input_dir_content = NULL;
