@@ -7,12 +7,27 @@
 #include<dirent.h>
 #include<string.h>
 #include<stdlib.h>
+#include<time.h>
 #include<errno.h>
 
 #define MAX_PATH 1024
+#define MAX_STAT 1024
 #define BUFFER sizeof(char) * 3
 #define MIN_INPUT_DIRS 5
 #define MAX_INPUT_DIRS 14
+
+void permission_translator(struct stat file, char* permissions) {
+    strcpy(permissions, "");
+    strcat(permissions, (file.st_mode & S_IRUSR) ? "r" : "-");
+    strcat(permissions, (file.st_mode & S_IWUSR) ? "w" : "-");
+    strcat(permissions, (file.st_mode & S_IXUSR) ? "x" : "-");
+    strcat(permissions, (file.st_mode & S_IRGRP) ? "r" : "-");
+    strcat(permissions, (file.st_mode & S_IWGRP) ? "w" : "-");
+    strcat(permissions, (file.st_mode & S_IXGRP) ? "x" : "-");
+    strcat(permissions, (file.st_mode & S_IROTH) ? "r" : "-");
+    strcat(permissions, (file.st_mode & S_IWOTH) ? "w" : "-");
+    strcat(permissions, (file.st_mode & S_IXOTH) ? "x\0" : "-\0");
+}
 
 void snap_file(char *output_path, char *input_path) {
     char buff[BUFFER];
@@ -28,6 +43,26 @@ void snap_file(char *output_path, char *input_path) {
         close(fw);
         return;
     }
+
+    struct stat fileStat;
+    char cStat[MAX_STAT];
+    char permissions[11];
+    permission_translator(fileStat, permissions);
+
+    sprintf(cStat, "File path: %s\n", input_path);
+    write(fw, cStat, sizeof(char) * strlen(cStat));
+
+    sprintf(cStat, "Size: %ld\n", fileStat.st_size);
+    write(fw, cStat, sizeof(char) * strlen(cStat));
+
+    sprintf(cStat, "Last change: %s", ctime(&fileStat.st_mtime));
+    write(fw, cStat, sizeof(char) * strlen(cStat));
+
+    sprintf(cStat, "Permissions: %s\n", permissions);
+    write(fw, cStat, sizeof(char) * strlen(cStat));
+
+    sprintf(cStat, "Inode number: %ld\n\n-------Content-------\n\n", fileStat.st_ino);
+    write(fw, cStat, sizeof(char) * strlen(cStat));
 
     while(read(fr, buff, sizeof(buff))) {
         write(fw, buff, sizeof(buff));
