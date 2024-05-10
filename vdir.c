@@ -8,6 +8,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<errno.h>
+
 #define MAX_PATH 1024
 #define BUFFER sizeof(char) * 3
 #define MIN_INPUT_DIRS 5
@@ -41,18 +42,12 @@ int dot_dir_validation(const char *path) {
     return !strcmp(path, ".\0") || !strcmp(path, "..\0");
 }
 
-void update_path(char* new_path, const char *old_path, const char *path_extender) {
-    char update_path_extender[MAX_PATH];
-    if(!strncmp(path_extender, "./\0", 2)) {
-        path_extender += 2;
-    } else if(!strncmp(path_extender, "../\0", 3)) {
-        path_extender += 3;
-    }
+const char* path_sanitizer(const char* path) {
+    return !strncmp(path, "./\0", 2) ? path += 2 : !strncmp(path, "../\0", 3) ? path += 3 : path;
+}
 
-    strcpy(update_path_extender, path_extender);
-    strcpy(new_path, old_path);
-    strcat(new_path, "/\0");
-    strcat(new_path, update_path_extender);
+void update_path(char* new_path, const char *old_path, const char *path_extender) {
+    sprintf(new_path, "%s/%s", old_path, path_sanitizer(path_extender));
 }
 
 void rec_parse(const char* output_dir_path, const char* input_dir_path) {
