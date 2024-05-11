@@ -96,6 +96,7 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
         struct stat fileStat;
         char cStat[MAX_STAT];
         char permissions[11];
+        if(stat(input_path, &fileStat) == 0) {
         permission_translator(fileStat, permissions);
 
         sprintf(cStat, "Last change: %s", ctime(&fileStat.st_atime));
@@ -115,6 +116,7 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
 
         sprintf(cStat, "Inode number: %ld\n\n-------Content-------\n\n", fileStat.st_ino);
         write(fw, cStat, sizeof(char) * strlen(cStat));
+        }
 
         while(read(fr, buff, sizeof(buff))) {
             write(fw, buff, sizeof(char) * strlen(buff));
