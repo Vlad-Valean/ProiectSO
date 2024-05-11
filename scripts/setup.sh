@@ -37,6 +37,11 @@ do
         openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file2_2_$i.txt"
         chmod 777 "../dir$i/subdir2/subdir1/file2_2_$i.txt"
 
+    elif [ "$1" = "a" ]; then
+        openssl rand -base64 100 >> "../dir$i/file$i.txt"
+        openssl rand -base64 100 >> "../dir$i/subdir1/file1_$i.txt"
+        openssl rand -base64 100 >> "../dir$i/subdir2/subdir1/file2_2_$i.txt"
+
     elif [ "$1" = "ri" ]; then
         rm -rf "../dir$i"
 
