@@ -48,30 +48,25 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
         dup2(pfd[1], STDOUT_FILENO);
         close(pfd[1]);
         char script_path[30] = "./scripts/quarantine.sh\0";
-        printf("input_path: %s\n", input_path);
         execlp(script_path, script_path, quarantine_path, input_path, NULL);
         perror("execlp");
         exit(EXIT_FAILURE);
     } else {
-        
         close(pfd[1]);
-
         char buf[1024];
         ssize_t num_bytes;
         while ((num_bytes = read(pfd[0], buf, sizeof(buf))) > 0) {
             // Process the data read from the pipe
-            printf("Parent process: Read %ld bytes from pipe: %.*s\n", num_bytes, (int)num_bytes, buf);
+            printf("Parent process: Read %ld bytes from pipe: %.*s", num_bytes, (int)num_bytes, buf);
         }
         if (num_bytes == -1) {
             perror("read");
             exit(EXIT_FAILURE);
         } else if (num_bytes == 0) {
             // End-of-file (EOF) reached
-            printf("End-of-file reached\n");
         }
         
         close(pfd[0]);
-    
 
         int status;
         wait(&status);
