@@ -4,14 +4,36 @@ for i in {1..9}
 do
     if [ "$1" = "c" ]; then
         mkdir "../dir$i"
+        chmod 777 "../dir$i"
+        
         mkdir "../dir$i/subdir1"
+        chmod 777 "../dir$i/subdir1"
+        
         mkdir "../dir$i/subdir2"
+        chmod 777 "../dir$i/subdir2"
+        
         mkdir "../dir$i/subdir2/subdir1"
-        echo "ceva1" > "../dir$i/file.txt"
-        echo "ceva1" > "../dir$i/subdir1/file.txt"
-        echo "ceva2" > "../dir$i/subdir2/subdir1/file1.txt"
-        echo "ceva3" > "../dir$i/subdir2/file.txt"
-        echo "ceva4" > "../dir$i/subdir2/subdir1/file2.txt"
+        chmod 777 "../dir$i/subdir2/subdir1"
+        
+        openssl rand -base64 500 > "../dir$i/file.txt"
+        echo " corrupted" >> "../dir$i/file.txt"
+        openssl rand -base64 100 >> "../dir$i/file.txt"
+        chmod 642 "../dir$i/file.txt"
+        
+        openssl rand -base64 500 > "../dir$i/subdir1/file.txt"
+        chmod 777 "../dir$i/subdir1/file.txt"
+        
+        openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file1.txt"
+        echo " corrupted" >> "../dir$i/subdir2/subdir1/file1.txt"
+        openssl rand -base64 100 >> "../dir$i/subdir2/subdir1/file1.txt"
+        chmod 777 "../dir$i/subdir2/subdir1/file1.txt"
+
+        openssl rand -base64 500 > "../dir$i/subdir2/file.txt"
+        chmod 777 "../dir$i/subdir2/file.txt"
+        
+        openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file2.txt"
+        chmod 777 "../dir$i/subdir2/subdir1/file2.txt"
+
     elif [ "$1" = "r" ]; then
         rm -rf "../dir$i"
         rm -rf "../target"

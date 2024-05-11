@@ -51,6 +51,9 @@ void snap_file(char *output_path, char *input_path) {
     char permissions[11];
     permission_translator(fileStat, permissions);
 
+    sprintf(cStat, "Last change: %s", ctime(&fileStat.st_atime));
+    write(fw, cStat, sizeof(char) * strlen(cStat));
+
     sprintf(cStat, "File path: %s\n", input_path);
     write(fw, cStat, sizeof(char) * strlen(cStat));
 
