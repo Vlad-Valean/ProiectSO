@@ -32,30 +32,72 @@ void permission_translator(struct stat file, char* permissions) {
 }
 
 void snap_file(char *output_path, const char *quarantine_path, char *input_path) {
-    char buff[BUFFER];
-
-    int fr = open(input_path, O_RDONLY ,  S_IRWXU | S_IRWXG | S_IRWXO);
-    if(fr == -1) {
-        close(fr);
-        return;
+    int pfd[2];
+    if (pipe(pfd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
     }
+    pid_t child_pid = fork();
     
-    int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
-    if(fw == -1) {
-        close(fw);
-        return;
-    }
-
-    int child_pid = fork();
     if(child_pid == -1) {
         perror("failed");
         exit(EXIT_FAILURE);
     } else if(child_pid == 0) {
+        
+        close(pfd[0]);
+        dup2(pfd[1], STDOUT_FILENO);
+        close(pfd[1]);
         char script_path[30] = "./scripts/quarantine.sh\0";
+        printf("input_path: %s\n", input_path);
         execlp(script_path, script_path, quarantine_path, input_path, NULL);
-
+        perror("execlp");
+        exit(EXIT_FAILURE);
     } else {
         
+        close(pfd[1]);
+
+        char buf[1024];
+        ssize_t num_bytes;
+        while ((num_bytes = read(pfd[0], buf, sizeof(buf))) > 0) {
+            // Process the data read from the pipe
+            printf("Parent process: Read %ld bytes from pipe: %.*s\n", num_bytes, (int)num_bytes, buf);
+        }
+        if (num_bytes == -1) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        } else if (num_bytes == 0) {
+            // End-of-file (EOF) reached
+            printf("End-of-file reached\n");
+        }
+        
+        close(pfd[0]);
+    
+
+        int status;
+        wait(&status);
+        if (WIFEXITED(status)) {
+            if (WEXITSTATUS(status) != EXIT_SUCCESS) {
+                printf("Child process failed\n");
+            }
+        } else {
+            printf("Child process terminated abnormally\n");
+        }
+
+
+        char buff[BUFFER];
+
+        int fr = open(input_path, O_RDONLY ,  S_IRWXU | S_IRWXG | S_IRWXO);
+        if(fr == -1) {
+            close(fr);
+            return;
+        }
+        
+        int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
+        if(fw == -1) {
+            close(fw);
+            return;
+        }
+
         struct stat fileStat;
         char cStat[MAX_STAT];
         char permissions[11];
@@ -83,15 +125,7 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
             write(fw, buff, sizeof(char) * strlen(buff));
         }
 
-        int status;
-        wait(&status);
-        if (WIFEXITED(status)) {
-            if (WEXITSTATUS(status) != EXIT_SUCCESS) {
-                printf("Child process failed\n");
-            }
-        } else {
-            printf("Child process terminated abnormally\n");
-        }
+        
         close(fr);
         close(fw);
     }

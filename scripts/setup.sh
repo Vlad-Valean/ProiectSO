@@ -15,24 +15,24 @@ do
         mkdir "../dir$i/subdir2/subdir1"
         chmod 777 "../dir$i/subdir2/subdir1"
         
-        openssl rand -base64 500 > "../dir$i/file.txt"
-        echo " corrupted" >> "../dir$i/file.txt"
-        openssl rand -base64 100 >> "../dir$i/file.txt"
-        chmod 642 "../dir$i/file.txt"
+        openssl rand -base64 500 > "../dir$i/file$i.txt"
+        echo " corrupted" >> "../dir$i/file$i.txt"
+        openssl rand -base64 100 >> "../dir$i/file$i.txt"
+        chmod 642 "../dir$i/file$i.txt"
         
-        openssl rand -base64 500 > "../dir$i/subdir1/file.txt"
-        chmod 777 "../dir$i/subdir1/file.txt"
+        openssl rand -base64 500 > "../dir$i/subdir1/file1_$i.txt"
+        chmod 777 "../dir$i/subdir1/file1_$i.txt"
         
-        openssl rand -base64 100 > "../dir$i/subdir2/subdir1/file1.txt"
-        echo "risk" >> "../dir$i/subdir2/subdir1/file1.txt"
-        openssl rand -base64 500 >> "../dir$i/subdir2/subdir1/file1.txt"
-        chmod 777 "../dir$i/subdir2/subdir1/file1.txt"
+        openssl rand -base64 100 > "../dir$i/subdir2/subdir1/file2_1_$i.txt"
+        echo "risk" >> "../dir$i/subdir2/subdir1/file2_1_$i.txt"
+        openssl rand -base64 500 >> "../dir$i/subdir2/subdir1/file2_1_$i.txt"
+        chmod 777 "../dir$i/subdir2/subdir1/file2_1_$i.txt"
 
-        openssl rand -base64 500 > "../dir$i/subdir2/file.txt"
-        chmod 777 "../dir$i/subdir2/file.txt"
+        openssl rand -base64 500 > "../dir$i/subdir2/file2_$i.txt"
+        chmod 777 "../dir$i/subdir2/file2_$i.txt"
         
-        openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file2.txt"
-        chmod 777 "../dir$i/subdir2/subdir1/file2.txt"
+        openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file2_2_$i.txt"
+        chmod 777 "../dir$i/subdir2/subdir1/file2_2_$i.txt"
 
     elif [ "$1" = "r" ]; then
         rm -rf "../dir$i"
