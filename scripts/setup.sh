@@ -38,6 +38,7 @@ do
         rm -rf "../dir$i"
         rm -rf "../target"
         rm -rf "../quarantine"
+        rm -rf "./artefacts"
     else 
         echo "./setup.sh c (create) / r (remove)";
         exit 1
