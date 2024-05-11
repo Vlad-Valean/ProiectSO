@@ -23,9 +23,9 @@ do
         openssl rand -base64 500 > "../dir$i/subdir1/file.txt"
         chmod 777 "../dir$i/subdir1/file.txt"
         
-        openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file1.txt"
-        echo " corrupted" >> "../dir$i/subdir2/subdir1/file1.txt"
-        openssl rand -base64 100 >> "../dir$i/subdir2/subdir1/file1.txt"
+        openssl rand -base64 100 > "../dir$i/subdir2/subdir1/file1.txt"
+        echo "risk" >> "../dir$i/subdir2/subdir1/file1.txt"
+        openssl rand -base64 500 >> "../dir$i/subdir2/subdir1/file1.txt"
         chmod 777 "../dir$i/subdir2/subdir1/file1.txt"
 
         openssl rand -base64 500 > "../dir$i/subdir2/file.txt"

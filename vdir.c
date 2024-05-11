@@ -31,7 +31,7 @@ void permission_translator(struct stat file, char* permissions) {
     strcat(permissions, (file.st_mode & S_IXOTH) ? "x\0" : "-\0");
 }
 
-void snap_file(char *output_path, char *input_path) {
+void snap_file(char *output_path, const char *quarantine_path, char *input_path) {
     char buff[BUFFER];
 
     int fr = open(input_path, O_RDONLY ,  S_IRWXU | S_IRWXG | S_IRWXO);
@@ -46,35 +46,55 @@ void snap_file(char *output_path, char *input_path) {
         return;
     }
 
-    struct stat fileStat;
-    char cStat[MAX_STAT];
-    char permissions[11];
-    permission_translator(fileStat, permissions);
+    int child_pid = fork();
+    if(child_pid == -1) {
+        perror("failed");
+        exit(EXIT_FAILURE);
+    } else if(child_pid == 0) {
+        char script_path[30] = "./scripts/quarantine.sh\0";
+        execlp(script_path, script_path, quarantine_path, input_path, NULL);
 
-    sprintf(cStat, "Last change: %s", ctime(&fileStat.st_atime));
-    write(fw, cStat, sizeof(char) * strlen(cStat));
+    } else {
+        
+        struct stat fileStat;
+        char cStat[MAX_STAT];
+        char permissions[11];
+        permission_translator(fileStat, permissions);
 
-    sprintf(cStat, "File path: %s\n", input_path);
-    write(fw, cStat, sizeof(char) * strlen(cStat));
+        sprintf(cStat, "Last change: %s", ctime(&fileStat.st_atime));
+        write(fw, cStat, sizeof(char) * strlen(cStat));
 
-    sprintf(cStat, "Size: %ld\n", fileStat.st_size);
-    write(fw, cStat, sizeof(char) * strlen(cStat));
+        sprintf(cStat, "File path: %s\n", input_path);
+        write(fw, cStat, sizeof(char) * strlen(cStat));
 
-    sprintf(cStat, "Last change: %s", ctime(&fileStat.st_mtime));
-    write(fw, cStat, sizeof(char) * strlen(cStat));
+        sprintf(cStat, "Size: %ld\n", fileStat.st_size);
+        write(fw, cStat, sizeof(char) * strlen(cStat));
 
-    sprintf(cStat, "Permissions: %s\n", permissions);
-    write(fw, cStat, sizeof(char) * strlen(cStat));
+        sprintf(cStat, "Last change: %s", ctime(&fileStat.st_mtime));
+        write(fw, cStat, sizeof(char) * strlen(cStat));
 
-    sprintf(cStat, "Inode number: %ld\n\n-------Content-------\n\n", fileStat.st_ino);
-    write(fw, cStat, sizeof(char) * strlen(cStat));
+        sprintf(cStat, "Permissions: %s\n", permissions);
+        write(fw, cStat, sizeof(char) * strlen(cStat));
 
-    while(read(fr, buff, sizeof(buff))) {
-        write(fw, buff, sizeof(char) * strlen(buff));
+        sprintf(cStat, "Inode number: %ld\n\n-------Content-------\n\n", fileStat.st_ino);
+        write(fw, cStat, sizeof(char) * strlen(cStat));
+
+        while(read(fr, buff, sizeof(buff))) {
+            write(fw, buff, sizeof(char) * strlen(buff));
+        }
+
+        int status;
+        wait(&status);
+        if (WIFEXITED(status)) {
+            if (WEXITSTATUS(status) != EXIT_SUCCESS) {
+                printf("Child process failed\n");
+            }
+        } else {
+            printf("Child process terminated abnormally\n");
+        }
+        close(fr);
+        close(fw);
     }
-
-    close(fr);
-    close(fw);
 }
 
 // path functions
@@ -92,7 +112,7 @@ void update_path(char* new_path, const char *old_path, const char *path_extender
 
 
 // main functions
-void rec_parse(const char* output_dir_path, const char* input_dir_path) {
+void rec_parse(const char* output_dir_path, const char *quarantine_path, const char* input_dir_path) {
     DIR *input_dir_obj = opendir(input_dir_path); 
     struct dirent *input_dir_content = NULL;
     DIR *child_input_dir_obj = NULL;
@@ -109,9 +129,9 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
             update_path(child_input_dir_path, input_dir_path, input_dir_content->d_name); //update input path
             update_path(child_output_dir_path, output_dir_path, child_input_dir_path); //generate output(snap) path
             if((child_input_dir_obj = opendir(child_input_dir_path))) {
-                rec_parse(output_dir_path, child_input_dir_path);
+                rec_parse(output_dir_path, quarantine_path, child_input_dir_path);
             } else {
-                snap_file(child_output_dir_path, child_input_dir_path);
+                snap_file(child_output_dir_path, quarantine_path, child_input_dir_path);
             }
         } 
 
@@ -119,7 +139,7 @@ void rec_parse(const char* output_dir_path, const char* input_dir_path) {
     closedir(input_dir_obj);
 }
 
-void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, int num_processes, int index) {
+void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, char *quarantine_path, int num_processes, int index) {
     
     if(index >= num_processes)
         return;
@@ -131,7 +151,7 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
         perror("failed");
         exit(EXIT_FAILURE);
     } else if(pid == 0) {
-        rec_parse(output_dir, snap_dirs[index]);        
+        rec_parse(output_dir, quarantine_path, snap_dirs[index]);        
     } else {
         int status;
         wait(&status);
@@ -142,7 +162,7 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
         } else {
             printf("Child process terminated abnormally for directory: %s\n", snap_dirs[index]);
         }
-        create_processes(snap_dirs, output_dir, num_processes, ++index);
+        create_processes(snap_dirs, output_dir, quarantine_path, num_processes, ++index);
     }
 }
 
@@ -184,6 +204,6 @@ int main(const int argc, const char **argv)  {
     mkdir(odir_path, S_IRWXU);
     mkdir(qdir_path, S_IRWXU);
     
-    create_processes(sdir_path, odir_path, argc - MIN_INPUT_DIRS, 0);   
+    create_processes(sdir_path, odir_path, qdir_path, argc - MIN_INPUT_DIRS, 0);   
     return 0;
 }
