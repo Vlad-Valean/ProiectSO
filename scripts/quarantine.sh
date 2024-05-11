@@ -5,22 +5,27 @@ fi
 
 destination_directory="$1"
 file="$2"
+chars=$(wc -c < "$file")
+words=$(wc -w < "$file")
+lines=$(wc -l < "$file")
 
-# Check if the destination directory exists and is a directory
+
 if [ ! -d "$destination_directory" ]; then
-    # echo "Error: '$destination_directory' is not a valid directory"
+    echo "Error: '$destination_directory' is not a valid directory"
     exit 1
 fi
 
-# Check if the file exists
 if [ ! -f "$file" ]; then
-    # echo "Error: '$file' does not exist or is not a regular file"
+    echo "Error: '$file' does not exist or is not a regular file"
     exit 1
 fi
 
-# Check if the file contains any keywords
-if grep -Eq '(corrupted|dangerous|risk|attack|malware|malicious)' "$file"; then
-    echo "$file"
-    # Move the file to the destination directory
-    mv "$file" "$destination_directory/"
+if grep -qP "[^\x00-\x7F]" "$file" ||
+    grep -Eq '(corrupted|dangerous|risk|attack|malware|malicious)' "$file" || 
+    ([ "$chars" -gt 2000 ] && [ "$words" -gt 1000 ] && [ "$lines" -lt 3 ]); 
+    then
+        echo "$file"
+        mv "$file" "$destination_directory/"
+else
+    echo "SAFE"
 fi

@@ -37,7 +37,6 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
         perror("failed");
         exit(EXIT_FAILURE);
     } else if(child_pid == 0) {
-        
         close(pfd[0]);
         dup2(pfd[1], STDOUT_FILENO);
         close(pfd[1]);
@@ -47,11 +46,15 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
         exit(EXIT_FAILURE);
     } else {
         close(pfd[1]);
-        char buf[1024];
+        char pipe_buff[1024];
         ssize_t num_bytes;
-        while ((num_bytes = read(pfd[0], buf, sizeof(buf))) > 0) {
+        while ((num_bytes = read(pfd[0], pipe_buff, sizeof(pipe_buff))) > 0) {
             // Process the data read from the pipe
-            printf("Parent process: Read %ld bytes from pipe: %.*s", num_bytes, (int)num_bytes, buf);
+            if(strncmp("SAFE", pipe_buff, 4)) {
+                printf("Malicious file detected: %ld bytes: %.*s", num_bytes, (int)num_bytes, pipe_buff);
+            } else {
+                printf("SAFE\n");
+            }
         }
         if (num_bytes == -1) {
             perror("read");
@@ -63,7 +66,7 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
         close(pfd[0]);
 
         int status;
-        wait(&status);
+        pid_t end_pid = wait(&status);
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status) != EXIT_SUCCESS) {
                 printf("Child process failed\n");
@@ -71,6 +74,9 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
         } else {
             printf("Child process terminated abnormally\n");
         }
+
+        printf("File %s scanned successfully\n", input_path);
+        printf("Grandchild Process terminated with PID %d and exit code %d\n", end_pid, WEXITSTATUS(status));
 
 
         char buff[BUFFER];

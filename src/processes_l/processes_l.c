@@ -16,6 +16,7 @@
 
 
 void rec_parse(const char* output_dir_path, const char *quarantine_path, const char* input_dir_path) {
+    int malicious = 0;
     DIR *input_dir_obj = opendir(input_dir_path); 
     struct dirent *input_dir_content = NULL;
     DIR *child_input_dir_obj = NULL;
@@ -43,7 +44,6 @@ void rec_parse(const char* output_dir_path, const char *quarantine_path, const c
 }
 
 void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, char *quarantine_path, int num_processes, int index) {
-    
     if(index >= num_processes)
         return;
 
@@ -54,10 +54,11 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
         perror("failed");
         exit(EXIT_FAILURE);
     } else if(pid == 0) {
-        rec_parse(output_dir, quarantine_path, snap_dirs[index]);        
+        rec_parse(output_dir, quarantine_path, snap_dirs[index]);
+        exit(0);        
     } else {
         int status;
-        wait(&status);
+        pid_t end_pid = wait(&status);
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status) != EXIT_SUCCESS) {
                 printf("Child process failed for directory: %s\n", snap_dirs[index]);
@@ -65,6 +66,8 @@ void create_processes(char snap_dirs[][MAX_INPUT_DIRS], const char* output_dir, 
         } else {
             printf("Child process terminated abnormally for directory: %s\n", snap_dirs[index]);
         }
+        printf("Snapshot for Directory %s created successfully\n", snap_dirs[index]);
+        printf("Child Process %d terminated with PID %d and exit code %d\n", index, end_pid, WEXITSTATUS(status));
         create_processes(snap_dirs, output_dir, quarantine_path, num_processes, ++index);
     }
 }
