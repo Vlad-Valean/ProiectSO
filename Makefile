@@ -1,15 +1,19 @@
-remove:
-	./scripts/setup.sh r
+remove_inputs:
+	./scripts/setup.sh ri
+
+remove_outputs:
+	./scripts/setup.sh ro
 
 create:
 	./scripts/setup.sh c
 
 refresh:
-	make remove
+	make remove_inputs
+	make remove_outputs
 	make create
 
 comp:
-	make refresh
+	make remove_outputs
 	mkdir ./artefacts
 	gcc -c ./src/main.c -o ./artefacts/main.o
 	gcc -c ./src/processes_l/processes_l.c -o ./artefacts/processes_l.o

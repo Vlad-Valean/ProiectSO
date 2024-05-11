@@ -3,6 +3,9 @@
 for i in {1..9}
 do
     if [ "$1" = "c" ]; then
+    	mkdir "../artefacts"
+        chmod 777 "../artefacts"
+
         mkdir "../dir$i"
         chmod 777 "../dir$i"
         
@@ -34,13 +37,15 @@ do
         openssl rand -base64 500 > "../dir$i/subdir2/subdir1/file2_2_$i.txt"
         chmod 777 "../dir$i/subdir2/subdir1/file2_2_$i.txt"
 
-    elif [ "$1" = "r" ]; then
+    elif [ "$1" = "ri" ]; then
         rm -rf "../dir$i"
+
+    elif [ "$1" = "ro" ]; then
         rm -rf "../target"
         rm -rf "../quarantine"
         rm -rf "./artefacts"
     else 
-        echo "./setup.sh c (create) / r (remove)";
+        echo "./setup.sh c (create) / ri (remove inputs) / ro (remove outputs)";
         exit 1
     fi
 done

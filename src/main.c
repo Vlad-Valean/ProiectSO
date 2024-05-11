@@ -46,7 +46,9 @@ int main(const int argc, const char **argv)  {
         printf("Error: No directories to be snapped provided.\n");
         exit(-1);
     }
- 
+    rmdir(odir_path);
+    rmdir(qdir_path);
+
     mkdir(odir_path, S_IRWXU);
     mkdir(qdir_path, S_IRWXU);
     

@@ -86,40 +86,62 @@ void snap_file(char *output_path, const char *quarantine_path, char *input_path)
             close(fr);
             return;
         }
-        
+
         int fw = open(output_path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
         if(fw == -1) {
             close(fw);
             return;
         }
 
+        if (fdatasync(fr) == -1) {
+            perror("fdatasync");
+        }
+
+        if (fdatasync(fw) == -1) {
+            perror("fdatasync");
+        }
+
         struct stat fileStat;
         char cStat[MAX_STAT];
         char permissions[11];
         if(stat(input_path, &fileStat) == 0) {
-        permission_translator(fileStat, permissions);
+            permission_translator(fileStat, permissions);
 
-        sprintf(cStat, "Last change: %s", ctime(&fileStat.st_atime));
-        write(fw, cStat, sizeof(char) * strlen(cStat));
+            sprintf(cStat, "Last change: %s", ctime(&fileStat.st_atime));
+            if(write(fw, cStat, sizeof(char) * strlen(cStat)) == -1) {
+                perror("write");
+            }
 
-        sprintf(cStat, "File path: %s\n", input_path);
-        write(fw, cStat, sizeof(char) * strlen(cStat));
+            sprintf(cStat, "File path: %s\n", input_path);
+            if(write(fw, cStat, sizeof(char) * strlen(cStat)) == -1) {
+                perror("write");
+            }
 
-        sprintf(cStat, "Size: %ld\n", fileStat.st_size);
-        write(fw, cStat, sizeof(char) * strlen(cStat));
+            sprintf(cStat, "Size: %ld\n", fileStat.st_size);
+            if(write(fw, cStat, sizeof(char) * strlen(cStat)) == -1) {
+                perror("write");
+            }
 
-        sprintf(cStat, "Last change: %s", ctime(&fileStat.st_mtime));
-        write(fw, cStat, sizeof(char) * strlen(cStat));
+            sprintf(cStat, "Last change: %s", ctime(&fileStat.st_mtime));
+            if(write(fw, cStat, sizeof(char) * strlen(cStat)) == -1) {
+                perror("write");
+            }
 
-        sprintf(cStat, "Permissions: %s\n", permissions);
-        write(fw, cStat, sizeof(char) * strlen(cStat));
+            sprintf(cStat, "Permissions: %s\n", permissions);
+            if(write(fw, cStat, sizeof(char) * strlen(cStat)) == -1) {
+                perror("write");
+            }
 
-        sprintf(cStat, "Inode number: %ld\n\n-------Content-------\n\n", fileStat.st_ino);
-        write(fw, cStat, sizeof(char) * strlen(cStat));
+            sprintf(cStat, "Inode number: %ld\n\n-------Content-------\n\n", fileStat.st_ino);
+            if(write(fw, cStat, sizeof(char) * strlen(cStat)) == -1) {
+                perror("write");
+            }
         }
 
         while(read(fr, buff, sizeof(buff))) {
-            write(fw, buff, sizeof(char) * strlen(buff));
+            if(write(fw, buff, sizeof(char) * strlen(buff)) == -1) {
+                perror("write");
+            }
         }
 
         
